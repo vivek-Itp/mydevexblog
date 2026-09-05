@@ -1,11 +1,11 @@
 site_name: Vivek's DevEx Notes
 site_description: Field notes on developer experience from 7+ years in DevOps and platform engineering.
 site_url: https://vivek-itp.github.io/mydevexblog/
-site_author: Vivek
+site_author: Vivek K
 repo_url: https://github.com/vivek-Itp/mydevexblog
 repo_name: vivek-Itp/mydevexblog
 edit_uri: edit/main/docs/
-copyright: Copyright &copy; 2026 Vivek
+copyright: Copyright &copy; 2026 Vivek K
 
 theme:
   name: material
