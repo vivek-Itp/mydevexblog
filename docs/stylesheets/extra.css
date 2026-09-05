@@ -1,0 +1,19 @@
+/* Small readability tweaks on top of the Material defaults. */
+.md-typeset {
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.md-typeset h1 {
+  font-weight: 700;
+}
+
+.md-typeset h2 {
+  font-weight: 600;
+  margin-top: 2.2em;
+}
+
+/* Slightly tighter blog post cards on the index page. */
+.md-post__content > h2 {
+  margin-top: 0.4em;
+}
