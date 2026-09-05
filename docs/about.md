@@ -4,7 +4,7 @@ title: About
 
 # About
 
-I am Vivek K. I have worked in DevOps and platform engineering for over seven years, building and running CI/CD pipelines, Kubernetes platforms, and the tooling that sits between developers and production.
+I am Vivek Kinnera. I have worked in DevOps and platform engineering for over seven years, building and running CI/CD pipelines, Kubernetes platforms, and the tooling that sits between developers and production.
 
 Most of that time was spent noticing the same pattern: the big outages get postmortems, but the daily friction does not. A flaky pipeline stage, an unclear error message, a deploy that needs three people to approve. None of it is dramatic. All of it adds up.
 
