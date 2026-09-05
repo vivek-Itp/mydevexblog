@@ -12,7 +12,6 @@ tags:
   - pipelines
   - devex
 slug: cicd-designed-for-developers
-draft: true
 ---
 
 Ask a developer which tool they touch most after their editor, and the honest answer is usually the CI pipeline. Every branch, every pull request, every deploy goes through it. Yet it is almost always designed by people who rarely have to wait on it.
