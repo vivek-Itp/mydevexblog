@@ -11,7 +11,6 @@ Allowed categories: CI/CD, Kubernetes, Platform Engineering, Developer Experienc
 ## Queue
 
 - [ ] Kubernetes for people who did not ask for Kubernetes | Kubernetes | Developers want to deploy, see logs and roll back. What the cluster asks of them instead, where the abstraction leaks, and what to put in front of it.
-- [ ] Self-service on a slide vs self-service in practice | Platform Engineering | The gap between an internal platform called self-service and the number of tickets it takes to get a new service running. What to measure to expose the gap.
 - [ ] Error messages are part of the platform | Developer Experience | The one line a developer reads when something fails is the platform's real user interface. How to write errors that say what broke, why, and what to do.
 - [ ] Golden paths that people actually take | Platform Engineering | Why templates and paved roads get abandoned, and what keeps developers on them without mandating it.
 - [ ] The support channel is your best product research | Developer Experience | Reading the platform Slack channel as a signal. Which questions repeat, what they reveal, and how to turn them into fixes instead of answers.
@@ -22,3 +21,5 @@ Allowed categories: CI/CD, Kubernetes, Platform Engineering, Developer Experienc
 - [ ] Measuring developer experience without a survey | Developer Experience | Lead time, re-run rate, time to first deploy, support volume. Numbers that reflect daily friction and how to collect them without a new tool.
 
 ## Drafted
+
+- [x] Self-service on a slide vs self-service in practice | Platform Engineering | The gap between an internal platform called self-service and the number of tickets it takes to get a new service running. What to measure to expose the gap. | drafted 2026-09-07
