@@ -9,6 +9,7 @@ copyright: Copyright &copy; 2026 Vivek Kinnera
 
 theme:
   name: material
+  custom_dir: overrides
   language: en
   icon:
     logo: material/notebook-edit-outline
