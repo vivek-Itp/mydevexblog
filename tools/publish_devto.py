@@ -103,12 +103,22 @@ def api(method: str, path: str, key: str, payload=None):
         headers={"api-key": key, "Content-Type": "application/json", "Accept": "application/vnd.forem.api-v1+json",
                  "User-Agent": "mydevexblog-publisher"},
     )
-    try:
-        with urllib.request.urlopen(req, timeout=60) as r:
-            return json.loads(r.read().decode("utf-8") or "null")
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", "replace")
-        raise SystemExit(f"dev.to API {method} {path} failed: {e.code} {body}")
+    for attempt in range(6):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return json.loads(r.read().decode("utf-8") or "null")
+        except urllib.error.HTTPError as e:
+            body = e.read().decode("utf-8", "replace")
+            if e.code == 429 and attempt < 5:
+                # dev.to throttles article writes, especially on new accounts.
+                # It tells us how long to wait; do that and try again.
+                m = re.search(r"(\d+) seconds", body)
+                wait = int(m.group(1)) + 5 if m else 60
+                print(f"rate limited by dev.to, waiting {wait}s before retrying {method} {path}")
+                time.sleep(wait)
+                continue
+            raise SystemExit(f"dev.to API {method} {path} failed: {e.code} {body}")
+    raise SystemExit(f"dev.to API {method} {path} failed after retries")
 
 
 def main() -> int:
