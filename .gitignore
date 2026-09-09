@@ -219,3 +219,6 @@ __marimo__/
 
 # MkDocs build output
 site/
+
+# dev.to dry-run output
+devto-preview/

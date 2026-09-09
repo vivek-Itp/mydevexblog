@@ -107,6 +107,9 @@ markdown_extensions:
 extra_css:
   - stylesheets/extra.css
 
+hooks:
+  - hooks/diagrams.py
+
 extra:
   social:
     - icon: fontawesome/brands/github
