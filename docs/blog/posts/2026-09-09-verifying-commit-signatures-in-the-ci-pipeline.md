@@ -13,6 +13,7 @@ tags:
   - signed-commits
   - supply-chain
 slug: verifying-commit-signatures-in-the-ci-pipeline
+draft: true
 ---
 
 Most teams that "require signed commits" have ticked a box in branch protection and stopped there. That box checks that a signature exists. It does not check that the key belongs to someone you trust, and it does nothing once the code is past the merge button.
