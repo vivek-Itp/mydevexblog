@@ -10,6 +10,7 @@ Allowed categories: CI/CD, Kubernetes, Platform Engineering, Developer Experienc
 
 ## Queue
 
+- [ ] Verifying commit signatures in the CI pipeline | CI/CD | Why signed commits matter, how to enforce verification in the pipeline rather than only in the repo settings, and what breaks for developers when you turn it on. NEEDS VIVEK'S DETAILS BEFORE DRAFTING: do not draft until this line has a "notes:" section with his real setup and experience.
 - [ ] Golden paths that people actually take | Platform Engineering | Why templates and paved roads get abandoned, and what keeps developers on them without mandating it.
 - [ ] The support channel is your best product research | Developer Experience | Reading the platform Slack channel as a signal. Which questions repeat, what they reveal, and how to turn them into fixes instead of answers.
 - [ ] Observability for developers, not just for on-call | Observability | Most dashboards are built for the operator. What a developer needs to see about their own service in the first five minutes after a deploy.
