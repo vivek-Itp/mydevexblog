@@ -146,7 +146,8 @@ def main() -> int:
         print(f"dry run: wrote {len(posts)} articles to {out}")
         return 0
 
-    existing = {}
+    by_canonical = {}
+    by_title = {}
     page = 1
     while True:
         batch = api("GET", f"/articles/me/all?per_page=100&page={page}", key)
@@ -154,13 +155,18 @@ def main() -> int:
             break
         for art in batch:
             if art.get("canonical_url"):
-                existing[art["canonical_url"]] = art["id"]
+                by_canonical[art["canonical_url"]] = art["id"]
+            if art.get("title"):
+                by_title.setdefault(art["title"].strip(), art["id"])
         if len(batch) < 100:
             break
         page += 1
 
     for a in posts:
-        aid = existing.get(a["canonical_url"])
+        # Match on canonical URL first. Fall back to the title so that a post
+        # whose URL changed (a corrected date, a new slug) updates the existing
+        # article instead of creating a duplicate.
+        aid = by_canonical.get(a["canonical_url"]) or by_title.get(a["title"].strip())
         if aid:
             api("PUT", f"/articles/{aid}", key, {"article": a})
             print(f"updated  {a['title']}")
