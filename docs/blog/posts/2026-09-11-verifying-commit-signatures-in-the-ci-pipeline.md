@@ -2,7 +2,7 @@
 title: "Verifying commit signatures in the CI pipeline"
 description: Branch protection says a commit is signed. The pipeline should check whose key signed it. How I enforced SSH-signed commits on a zero-trust codebase, and what broke.
 date:
-  created: 2026-09-09
+  created: 2026-09-11
 authors:
   - vivek
 categories:
