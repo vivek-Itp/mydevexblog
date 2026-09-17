@@ -2,7 +2,7 @@
 title: "The support channel is your best product research"
 description: Platform teams run user research badly and run a support channel every day. The channel is already the research. Most teams just answer it instead of reading it.
 date:
-  created: 2026-09-13
+  created: 2026-09-17
 authors:
   - vivek
 categories:
