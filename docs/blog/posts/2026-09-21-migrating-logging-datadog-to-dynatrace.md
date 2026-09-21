@@ -1,6 +1,6 @@
 ---
-title: "Deprecating a platform feature without losing trust"
-description: We moved logging from Datadog to Dynatrace. The applications were the easy part. What it cost was the monitors and the habit of knowing how to ask a question.
+title: "What migrating logging from Datadog to Dynatrace actually cost us"
+description: The applications were the easy part. What it cost was the masking rules nobody had written down, every monitor built on the old logs, and the habit of knowing how to ask a question.
 date:
   created: 2026-09-21
 authors:
@@ -12,7 +12,7 @@ tags:
   - deprecation
   - observability
   - migration
-slug: deprecating-without-losing-trust
+slug: migrating-logging-datadog-to-dynatrace
 ---
 
 Every platform team eventually has to take something away. The technical part is usually straightforward. What goes wrong is everything between announcing it and switching it off, and the cost almost never lands where you expect.
@@ -21,7 +21,9 @@ Every platform team eventually has to take something away. The technical part is
 
 The clearest example I have is moving our logging from Datadog to Dynatrace. The driver was ordinary: cost, plus consolidating logs and metrics onto one platform instead of paying two vendors to hold two halves of the same picture.
 
-I expected the hard part to be the applications. It was not. The applications barely noticed. What actually cost us was the monitoring built on top of the logs, and the fact that a few hundred people had to relearn how to ask a question.
+Before anything else: this is not a comparison of the two products, and nothing here is a complaint about either. Both do the job. The decision was commercial, the way most tooling decisions are, and what follows is about the migration rather than the tools. I have kept the internal specifics deliberately light.
+
+I expected the hard part to be the applications. It was not. The applications barely noticed. What actually cost us was the monitoring built on top of the logs, and the fact that everyone who used logs daily had to relearn how to ask a question.
 
 ## What I expected to be hard, and what was
 
@@ -39,7 +41,7 @@ The two bottom rows are the whole story. Neither was on my list at the start.
 
 On paper the change was small. Logs went to a forwarder, and the forwarder needed to point somewhere new. No application code, no library swap, no redeploy required to change a destination.
 
-What was not on paper was everything that had accumulated inside that forwarder. Over the years it had picked up custom masking rules, written against the old vendor's configuration format, quietly redacting things that must not leave the estate. They were not documented as a dependency on the vendor. They were just part of how logging worked.
+What was not on paper was everything that had accumulated inside that forwarder. Over the years it had picked up custom masking rules, written against the old vendor's configuration format, quietly redacting sensitive values before logs left our systems. They were not documented as a dependency on the vendor. They were just part of how logging worked.
 
 That is the shape of the hidden dependency in most deprecations. Not the integration everyone knows about, but the small accretions around it that nobody wrote down because they were never a decision, only a series of fixes.
 
