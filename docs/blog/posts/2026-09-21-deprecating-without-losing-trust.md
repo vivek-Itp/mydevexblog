@@ -1,6 +1,6 @@
 ---
 title: "Deprecating a platform feature without losing trust"
-description: Announcing a deprecation is the easy part. What you do between the announcement and the switch-off decides whether anyone believes the next one.
+description: We moved logging from Datadog to Dynatrace. The applications were the easy part. What it cost was the monitors and the habit of knowing how to ask a question.
 date:
   created: 2026-09-21
 authors:
@@ -10,123 +10,127 @@ categories:
 tags:
   - platform-engineering
   - deprecation
+  - observability
   - migration
 slug: deprecating-without-losing-trust
 ---
 
-Every platform team eventually has to take something away. An old deploy path, a template nobody should copy any more, a service that has been replaced. The technical part is usually straightforward. The part that goes wrong is everything between the announcement and the switch-off.
+Every platform team eventually has to take something away. The technical part is usually straightforward. What goes wrong is everything between announcing it and switching it off, and the cost almost never lands where you expect.
 
 <!-- more -->
 
-I have run deprecations that went quietly and ones that turned into a month of firefighting, and the difference was rarely technical. It came down to whether teams believed the deadline, and whether the migration was work they had to do or work that was mostly done for them.
+The clearest example I have is moving our logging from Datadog to Dynatrace. The driver was ordinary: cost, plus consolidating logs and metrics onto one platform instead of paying two vendors to hold two halves of the same picture.
 
-## What you say and what they hear
+I expected the hard part to be the applications. It was not. The applications barely noticed. What actually cost us was the monitoring built on top of the logs, and the fact that a few hundred people had to relearn how to ask a question.
 
-| What the announcement said | What teams heard |
+## What I expected to be hard, and what was
+
+| Expected to be hard | Actually hard |
 |---|---|
-| "Deprecated, please migrate by March" | Not urgent. There will be a reminder |
-| "This will be removed in the next quarter" | Some quarter. Probably not this one |
-| "We are extending the deadline to give teams time" | The deadline is negotiable |
-| "Final warning before removal" | The previous three warnings were not final |
-| The thing actually stops working | Oh. That was real |
+| Changing every application | The forwarder changed; apps mostly did not |
+| Getting teams to prioritise the work | It rode along with their normal deployments |
+| Log data itself | Custom masking rules tied to the old vendor |
+| Nothing in particular | Every monitor and alert built on the old logs |
+| Nothing in particular | Teams learning to query in the new tool |
 
-The gap between the two columns is trust, and it is spent rather than built. Every deprecation you announce and do not follow through on makes the next one cheaper to ignore.
+The two bottom rows are the whole story. Neither was on my list at the start.
 
-## 1. The announcement is not the deprecation
+## 1. Find the thing that is not in the obvious place
 
-A deprecation is a migration project that happens across teams you do not manage. The announcement is the smallest part of it.
+On paper the change was small. Logs went to a forwarder, and the forwarder needed to point somewhere new. No application code, no library swap, no redeploy required to change a destination.
 
-If all you do is send a message and set a date, you have transferred the entire cost onto every team that uses the thing, at a moment they did not choose, competing with work they did choose. Most of them will rationally defer it until the deadline is real, which means the last week before removal is where all the work and all the incidents happen.
+What was not on paper was everything that had accumulated inside that forwarder. Over the years it had picked up custom masking rules, written against the old vendor's configuration format, quietly redacting things that must not leave the estate. They were not documented as a dependency on the vendor. They were just part of how logging worked.
 
-Planning backwards from the switch-off is the fix. What has to be true a week before? A month before? What can the platform team do so that most services need no work at all?
+That is the shape of the hidden dependency in most deprecations. Not the integration everyone knows about, but the small accretions around it that nobody wrote down because they were never a decision, only a series of fixes.
 
 !!! example "What this looked like for me"
 
-    The first deprecation I ran was an announcement, a date about a quarter out, and a couple of reminders. On the date, a meaningful fraction of services had not moved, and switching off would have broken them, so we extended.
+    The forwarder swap itself was an afternoon of work. The masking rules were not, because they had to be reproduced exactly in a different configuration language, and "exactly" is the operative word when the rules exist to keep sensitive values out of a log store.
 
-    Extending felt like the responsible choice and it was the most expensive thing we did, because it confirmed that our deadlines were soft. The next deprecation went slower than the first, and I do not think that was a coincidence.
+    Going through them one at a time was tedious and it was also the only responsible option. That was the point where the migration stopped being a config change and became a piece of work with a real review attached.
 
-## 2. You do not know who uses it
+## 2. Run both, and validate, before removing anything
 
-Almost every deprecation I have been part of started with an assumption about usage that turned out to be wrong. Either a service nobody remembered was depending on the old thing, or half the "users" had already stopped and nobody had noticed.
+The decision that made everything else possible was refusing to cut over. For a couple of months, logs flowed to both platforms at once. Nothing was removed while we compared.
 
-Before announcing anything, instrument it. Log every use with enough detail to identify the caller, and let it run long enough to catch the weekly and monthly jobs. The list you get is usually shorter than feared and contains at least one genuine surprise.
-
-That list then becomes the entire project plan: it is the set of teams to talk to, and later it is the burn-down that tells you whether removal is safe.
-
-!!! example "The list that was wrong in both directions"
-
-    When I actually measured usage of a deploy path we intended to remove, the results went both ways. Several teams we had been chasing had migrated months earlier and simply never said so. Meanwhile a scheduled job nobody owned was still calling it monthly, which we would not have found in time.
-
-    Measuring first turned a vague negotiation with a long list of teams into a specific conversation with a short one, and surfaced the one caller that would actually have broken.
-
-## 3. Do the migration for them wherever you can
-
-The strongest deprecation is one where most teams have nothing to do. If the change can be made mechanically, make it mechanically: open the pull request in each repository, prove it passes their pipeline, and let the owning team click merge.
-
-This flips the economics. Instead of asking twenty teams to each schedule a small piece of work, you do the work once and ask each team for a review. The remaining conversations are only with the services that genuinely cannot be migrated automatically, and those are the ones that needed a human anyway.
+Dual shipping costs money, briefly, and it buys the only thing that makes removal safe: evidence. Not a belief that the new pipeline works, but a side-by-side you can point at. Same volumes, same fields, same masking applied, same events present in both.
 
 ```mermaid
 flowchart LR
-    A[Instrument the old path] --> B[Measure real usage<br/>for a full month]
-    B --> C[Announce, with the<br/>switch-off date]
-    C --> D[Open migration PRs<br/>for every service that can be]
-    D --> E{Still calling<br/>the old path?}
-    E -->|no| F[Remove on the date]
-    E -->|yes| G[Talk to the few<br/>that are left]
-    G --> F
-    style B fill:#e8f5e9,stroke:#2e7d32
+    A[Forwarder ships to<br/>the old platform] --> B[Add the new platform<br/>as a second destination]
+    B --> C[Both receive<br/>for a couple of months]
+    C --> D[Compare: volumes,<br/>fields, masking, gaps]
+    D --> E{Does the new side<br/>answer the same questions?}
+    E -->|no| F[Fix, keep both running]
+    F --> D
+    E -->|yes| G[Remove the old destination]
+    style C fill:#e8f5e9,stroke:#2e7d32
     style D fill:#e8f5e9,stroke:#2e7d32
 ```
 
-The measurement at the start and the automation in the middle are what make the date at the end keepable. Without them, the date is a hope.
+The loop in the middle is what a validation period is for. Without it, "are we ready to switch off" is a judgement call made under time pressure. With it, the answer is a comparison anybody can check.
 
-!!! example "Twenty pull requests instead of twenty conversations"
+!!! example "What the overlap actually caught"
 
-    For one migration the change was almost entirely mechanical: a configuration block moved and a field was renamed. Rather than document it and ask each team to do it, we generated the pull request for every affected repository, with the pipeline already passing.
+    The overlap did not produce a dramatic discovery, and I count that as the period doing its job rather than being unnecessary. It let us confirm that masking was being applied the same way on both sides, which was the thing I was least willing to guess about.
 
-    Most merged within a few days, some within minutes. The handful that did not were services with something unusual going on, which is exactly where our time was worth spending. The documentation we had written first, and which almost nobody had read, had produced nothing comparable.
+    Had we cut over directly and been wrong about that, we would have found out from the wrong direction entirely.
 
-## 4. A deadline you do not enforce is a lesson
+## 3. Let it ride on work teams are already doing
 
-This is the one I got wrong and would most want to change. When the date arrives and some teams have not moved, extending feels kind. It is kind to those teams and costly to everyone else, because it teaches the whole organisation that platform deadlines are negotiable.
+We did not run this as a migration project with a deadline and a chase list. Teams picked up the change as part of their normal feature deployments. Whatever they were shipping next carried the new configuration with it.
 
-Two things make the date holdable without being reckless. First, do not set a date you are not prepared to keep, which usually means setting it further out than feels necessary. Second, make the consequence of the date proportionate and reversible: the old path stops working, and there is a documented way to turn it back on for a few days if something genuinely breaks.
+That choice is worth being honest about, because it trades one problem for another.
 
-A switch-off you can reverse in five minutes is much easier to actually perform than one that is permanent, and performing it is the entire point.
+What you gain is real. There is no separate piece of work competing with a team's roadmap, no deadline anyone has to defend, and no incentive to rush. The change arrives with something the team wanted to ship anyway.
 
-## 5. Degrade gradually, and make it visible
+What you give up is predictability. A team that does not deploy for six weeks has not migrated for six weeks, and the tail is as long as your slowest-moving service. You cannot put a date on the board and be confident about it.
 
-A binary switch from working to gone is the most alarming possible version. Turning the pressure up slowly gives teams a real signal that the deadline is approaching, in a form they cannot ignore.
+I think it was the right call here, specifically because dual shipping made a long tail harmless. Nothing was breaking while we waited. Take away the overlap and the same approach becomes a slow-motion outage waiting for the least active team.
 
-The sequence I have seen work:
+!!! example "No chase list"
 
-1. **A warning in the output**, on every use, naming the replacement and the date.
-2. **A warning that also reaches the owning team's channel,** weekly, listing what is still calling the old path.
-3. **Deliberate slowness or a brief scheduled outage** close to the date, so the dependency becomes visible to anyone who has not read anything.
-4. **Removal.**
+    The thing I noticed most was the absence of the usual conversation. Nobody had to be persuaded, because nobody was being asked to stop what they were doing.
 
-Step three feels aggressive and it is far kinder than a surprise on the day. A team that discovers a forgotten dependency during a planned hour-long outage two weeks out has time to react. The same discovery on removal day is an incident.
+    The trade shows up at the other end. The final stretch is a small number of services that simply had not deployed recently, and those needed individual conversations rather than a broadcast.
 
-!!! example "The brief outage that found the stragglers"
+## 4. The applications were fine. The monitoring was not
 
-    Before one removal we ran a short, announced outage of the old path about a fortnight ahead. Two teams got in touch within the hour, both surprised, both with a dependency they had not known about.
+Here is the part I would tell anyone planning a similar move: the migration is not the logs, it is everything built on top of them.
 
-    Without it, both would have found out on the day, at the same time, while we were in the middle of removing the thing. It was the cheapest hour of firefighting I have ever spent.
+Monitors, alerts and dashboards are written against a specific query language, specific field names, and a specific way the platform structures data. None of that survives a vendor change automatically. Every one of them has to be rebuilt, tested, and trusted again.
+
+That work is invisible in the plan, because nobody thinks of an alert as an integration. It is also the work where getting it wrong is worst: an alert that silently stops firing is far more dangerous than a log line that fails to arrive, and it fails quietly by definition.
+
+!!! example "Rebuilding the things nobody counted"
+
+    The monitors were the bulk of the real effort and were not what I had scoped at the start. Each one had to be re-expressed in the new platform and then actually verified, because the only way to trust an alert is to make it fire.
+
+    If I ran this again, I would treat monitor migration as the main workstream from day one, and the forwarder change as the small task it turned out to be.
+
+## 5. The real cost was people relearning how to ask
+
+The last thing, and the one I keep thinking about, is that the hardest part of this was not technical at all.
+
+People had years of muscle memory in the old tool. They knew how to get from an alert to the relevant log line in three moves, because they had done it hundreds of times. The new platform can answer all the same questions and it answers them differently, and that difference lands during incidents, when nobody has patience for learning.
+
+That is a genuine cost of any tooling migration and it usually goes unnamed, because it does not appear as a ticket or an outage. It appears as things taking longer for a while, and as a quiet preference for the old tool for as long as the old tool still exists.
+
+What would have helped is treating query fluency as part of the migration rather than an afterthought: a short page of the ten queries people actually run, translated, and a channel where asking how to express something was normal rather than an admission.
 
 ## 6. Leave a tombstone
 
-When the thing is finally gone, what replaces it matters. A connection refused, a generic 404, or a missing command tells the person nothing and sends them to your support channel.
+When the old destination finally went away, what mattered was that anyone who went looking found an explanation rather than silence. What was removed, when, where the data lives now, and how to ask the question they were trying to ask.
 
-Leave something behind that explains itself: an error that names what was removed, when, what replaced it, and where the migration guide is. Keep it for far longer than feels necessary, because the caller you did not find in your measurements is exactly the one that runs once a year.
+Keep it up longer than feels necessary. The person who needs it is the one who only looks at logs when something is badly wrong, and they will arrive months later.
 
 ## Takeaways
 
-- **Plan backwards from the switch-off.** The announcement is the smallest part of the work.
-- **Measure real usage for a full cycle** before announcing. The list will surprise you in both directions.
-- **Automate the migration** and open the pull requests yourself. Twenty reviews beats twenty projects.
-- **Do not set a date you will not keep.** Extending is the most expensive kindness available.
-- **Degrade gradually,** including a short announced outage before removal.
-- **Leave an error that explains itself,** and leave it up for a long time.
+- **Look for the accretions,** not the integration. The forwarder was easy; the masking rules written for the old vendor were not.
+- **Run both and compare** before removing anything. The overlap buys evidence rather than confidence.
+- **Riding on normal deployments avoids the chase list** and gives up predictability. It is only safe if nothing breaks while you wait.
+- **Scope the monitors as the main work,** not the pipeline. An alert that stops firing fails silently.
+- **Name the relearning cost.** Query fluency is part of the migration, and it is paid during incidents.
+- **Leave an explanation behind** for the person who shows up months later.
 
-What I have not worked out is the deprecation that has no replacement, where the answer is "this capability is going away and you will have to do without it". Every technique above assumes there is somewhere to migrate to. When there is not, the conversation is about priorities rather than migration, and I have never found a way to make that one go smoothly.
+What I still have no good answer for is the deprecation with no replacement, where the honest message is that a capability is going away and teams will have to do without it. Everything above works because there was somewhere to go. When there is not, the conversation is about priorities rather than migration, and I have never found a way to make that one go smoothly.
