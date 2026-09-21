@@ -2,7 +2,7 @@
 title: "Local development environments that match production closely enough"
 description: Full parity is a trap and no parity is worse. The useful question is which differences change behaviour and which are just noise.
 date:
-  created: 2026-09-19
+  created: 2026-09-21
 authors:
   - vivek
 categories:
