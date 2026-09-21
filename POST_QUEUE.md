@@ -11,6 +11,10 @@ Allowed categories: CI/CD, Kubernetes, Platform Engineering, Developer Experienc
 ## Queue
 
 - [ ] Measuring developer experience without a survey | Developer Experience | Lead time, re-run rate, time to first deploy, support volume. Numbers that reflect daily friction and how to collect them without a new tool.
+- [ ] Running your own GitLab runners, and what it costs you | CI/CD | Self-hosted runners against managed ones: isolation, scaling, caching, the maintenance nobody budgets for, and what developers notice. NEEDS VIVEK'S DETAILS BEFORE DRAFTING: do not draft until this line has a "notes:" section.
+- [ ] Signing build artifacts and proving where they came from | Tooling | Signing a JAR with a KMS key on publish, verifying it before deploy, and what a real provenance chain asks of the build. NEEDS VIVEK'S DETAILS BEFORE DRAFTING: do not draft until this line has a "notes:" section.
+- [ ] Developer experience under a zero-trust policy | Developer Experience | What zero trust changes about an ordinary working day on a high-criticality application, and which controls are worth their friction. NEEDS VIVEK'S DETAILS BEFORE DRAFTING: do not draft until this line has a "notes:" section.
+- [ ] Consolidating observability onto one vendor | Observability | The wider programme behind the logging move: metrics as well as logs, what consolidation actually bought, and what it cost. NEEDS VIVEK'S DETAILS BEFORE DRAFTING: do not draft until this line has a "notes:" section.
 
 ## Drafted
 
