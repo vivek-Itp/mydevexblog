@@ -11,7 +11,6 @@ Allowed categories: CI/CD, Kubernetes, Platform Engineering, Developer Experienc
 ## Queue
 
 - [ ] Local development environments that match production closely enough | Developer Experience | How far parity needs to go, where it stops being worth it, and the cost of getting it wrong in either direction.
-- [ ] Deprecating a platform feature without losing trust | Platform Engineering | Removing something teams depend on. Timelines, migration help, and what happens when a deprecation is announced and then never enforced.
 - [ ] Measuring developer experience without a survey | Developer Experience | Lead time, re-run rate, time to first deploy, support volume. Numbers that reflect daily friction and how to collect them without a new tool.
 
 ## Drafted
@@ -24,3 +23,4 @@ Allowed categories: CI/CD, Kubernetes, Platform Engineering, Developer Experienc
 - [x] Self-service on a slide vs self-service in practice | Platform Engineering | The gap between an internal platform called self-service and the number of tickets it takes to get a new service running. What to measure to expose the gap. | drafted 2026-09-07
 - [x] The support channel is your best product research | Developer Experience | Reading the platform Slack channel as a signal. Which questions repeat, what they reveal, and how to turn them into fixes instead of answers. | drafted 2026-09-13
 - [x] Verifying commit signatures in the CI pipeline | CI/CD | Why signed commits matter, how to enforce verification in the pipeline rather than only in the repo settings, and what breaks for developers when you turn it on. | notes: SSH-signed commits; public keys in parameter store; GitLab runner verifies each new commit against the author key; branch protection plus pipeline check on MR and on promotion to staging over the full range since last merge; crypto application with zero-trust policy; runner signs JAR with KMS key on publish to Nexus; rebases, bots, rotation and new laptops all broke it, fixed with force push on feature branches and holding old and new keys; keys verified per developer, enforcement date with cutoff so older commits ignored; key maintenance automation still missing. | drafted 2026-09-09
+- [x] Deprecating a platform feature without losing trust | Platform Engineering | Removing something teams depend on. Timelines, migration help, and what happens when a deprecation is announced and then never enforced. | drafted 2026-09-21
