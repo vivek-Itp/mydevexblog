@@ -109,7 +109,7 @@ That last one is the quiet win. Replacing an instance used to touch something in
 
 *This section is the part I would want to read if someone else had written this post.*
 
-**A dependency at the edge.** The edge network is now in the path of everything. That was true of a load balancer too, but this is a different vendor with a different failure mode, and if it is unavailable there is no inbound path to fall back to, because you deliberately removed it. That is a real trade and it should be a decision rather than a discovery.
+**A dependency at the edge.** The edge network is now in the path of everything. That was true of a load balancer too, but this is a different vendor with a different failure mode, and the inbound path you would otherwise fall back to is gone by design. The answer is failover at the edge rather than a reopened door, which means a second location to route through — and that belongs in the plan from the start, not after the first time you need it.
 
 **Access control in one place means one place to get wrong.** Everything that used to be distributed across network rules now lives in policy at the edge. That is better, and it concentrates the consequence of a mistake.
 
@@ -124,6 +124,6 @@ That last one is the quiet win. Replacing an instance used to touch something in
 - **Access control becomes a policy about people**, not addresses — and it has to move to the edge as part of the change, not after it.
 - **Cross-account reachability may not need peering.** A lot of what peering gets used for is reachability obtainable with less to keep in step.
 - **Expect the DNS consolidation.** Once the edge is in front, a separate managed DNS service is one more place a hostname can be defined.
-- **You are trading a set of network controls for a dependency on one edge.** Make that a decision, not a side effect.
+- **You are trading a set of network controls for a dependency on the edge.** Make that a decision, not a side effect, and design the edge failover alongside it rather than afterwards.
 
-What I have not resolved is what the fallback looks like. We removed the inbound path on purpose, and that means there is no second way in when the edge is the thing that is unavailable. Every answer I have thought of so far amounts to keeping a door closed-but-present, which is the thing this design exists to avoid.
+The question I am working on now is failover at the edge itself. Removing the inbound path was deliberate, so the answer cannot be a door kept closed-but-present — that is precisely what this design exists to avoid. The direction I am taking is a second edge location to route through, so that the fallback is another path to the same closed origin rather than a way around it. Designing that properly, and proving it fails over the way you expect rather than the way the diagram suggests, is not something I would want to find out about under pressure.
