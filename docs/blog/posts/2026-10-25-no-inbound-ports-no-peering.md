@@ -93,17 +93,36 @@ Two properties are worth knowing before you do the same:
 
     Collapsing it was less about cost than about the number of systems that have to agree for a hostname to work. That number went from two to one, and the class of outage where they disagree went away with it.
 
-## 5. What it bought in maintenance
+## 5. What it saves, in resources and in effort
 
-The honest summary: fewer moving parts that have to be correct at the same time.
+Two kinds of saving, and they are not the same kind of argument.
+
+The first is resources that stop existing. Each of these is a billed thing in a native cloud design, and several of them are billed per environment, so the count multiplies quietly as you add a staging and a pre-production:
+
+| Native cloud design | With an outbound connector |
+|---|---|
+| A public load balancer per entry point, with listeners, target groups and health checks | Not required — the edge is the entry point |
+| Certificates to issue and renew at that balancer | Terminated at the edge |
+| Peering relationships between accounts, with route tables and address-range planning | Not required — each side dials out |
+| A separate managed DNS service, and its queries | Collapsed into the edge |
+
+The second is effort, which nobody bills you for and which is the larger number:
 
 - No inbound rules to review, widen by accident, or forget to narrow again.
-- No peering relationships, route tables or address-range coordination between accounts.
-- One place where a hostname is defined.
+- No route tables or address-range coordination to keep in step across accounts.
+- One place where a hostname is defined, so no class of outage where two systems disagree about it.
 - One place where access policy is expressed, in terms of identity rather than addresses.
-- Host replacement does not involve a network change: the new host dials out the same way the old one did.
+- Host replacement does not involve a network change: the new host dials out the way the old one did.
 
 That last one is the quiet win. Replacing an instance used to touch something in the network — a target registration, a rule, an address. Now it touches the connector and nothing else.
+
+!!! example "Where the effort saving actually shows up"
+
+    The resource list is the part that gets into a business case, and it is the less interesting half. The per-environment multiplication is real — balancers and peering relationships are things you need one of per environment, and the count grows without anyone deciding it should — but it is a number somebody can argue with.
+
+    The effort saving is harder to put in a slide and easier to feel. It is the review that does not have to happen, the two-account change that is now a one-account change, the address-range conversation that nobody needs to have. None of that appears on an invoice, and all of it was coming out of the same engineers' weeks.
+
+    *The costing here is structural rather than measured:* I am describing which line items and which recurring tasks stop existing, not a figure. Anyone making this case should count their own, because the balance depends entirely on how many environments and accounts you are running.
 
 ## 6. What you take on in exchange
 
@@ -123,6 +142,7 @@ That last one is the quiet win. Replacing an instance used to touch something in
 - **The requirement on your side is one outbound destination and port**, which is a much easier control to describe and defend than an inbound rule.
 - **Access control becomes a policy about people**, not addresses — and it has to move to the edge as part of the change, not after it.
 - **Cross-account reachability may not need peering.** A lot of what peering gets used for is reachability obtainable with less to keep in step.
+- **Count the saving in two columns.** Resources that stop existing — a balancer per entry point, its certificates, peering, a separate DNS service — and the recurring effort nobody bills you for, which is the larger number.
 - **Expect the DNS consolidation.** Once the edge is in front, a separate managed DNS service is one more place a hostname can be defined.
 - **You are trading a set of network controls for a dependency on the edge.** Make that a decision, not a side effect, and design the edge failover alongside it rather than afterwards.
 
