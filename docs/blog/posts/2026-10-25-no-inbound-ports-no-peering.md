@@ -36,9 +36,9 @@ The connector keeps several connections open to different edge locations rather 
 
 !!! example "Reading the security group afterwards"
 
-    The moment it clicked for me was looking at the instance's inbound rules after the cutover and finding nothing in them. Not a narrow rule. Not a rule restricted to the edge network's address ranges. An empty list.
+    The moment it clicked was looking at the instance's inbound rules after the cutover and finding nothing in them. Not a narrow rule, not one restricted to the edge's address ranges. An empty list.
 
-    That is a different kind of statement from "we only allow traffic from these addresses". A narrow inbound rule is still a door, and the whole discipline of keeping it narrow — reviewing it, auditing it, catching the one someone widened for an afternoon and forgot — exists because the door exists. Remove the door and the discipline is no longer needed, which is worth more than the rule it replaced.
+    That is a different statement from "we only allow traffic from these addresses". A narrow rule is still a door, and the discipline of keeping it narrow — reviewing it, auditing it, catching the one someone widened for an afternoon and forgot — exists because the door exists. Remove the door and the discipline goes with it, which is worth more than the rule it replaced.
 
 ## 2. Outbound to the edge is the whole requirement
 
@@ -48,15 +48,15 @@ That is a short list, and it is the kind of rule an outbound policy can be speci
 
 !!! example "Why this is an easier conversation with security"
 
-    An inbound rule is permission for the world to attempt something. An outbound rule is permission for one of our processes to reach one named place.
+    An inbound rule is permission for the world to attempt something. An outbound rule is permission for one of our processes to reach one named place. Those are not the same risk and they do not need the same review.
 
-    Those are not the same risk, and they do not need the same review. The second one I can describe in a sentence and defend without a diagram, which matters more than it should when a control has to be explained to people who will not read the diagram.
+    The second one I can describe in a sentence and defend without a diagram, which matters more than it should when a control has to be explained to people who will not read the diagram.
 
 ## 3. Access decisions move to the edge, and that is the point
 
 With no inbound path, the question "who may reach this site" stops being a network question. It becomes a policy question at the edge, in front of the application, where it can be expressed in terms of people and groups rather than addresses.
 
-That is the part that made this worth doing rather than just clever. Address-based access control has always been a proxy for what we actually mean. We do not care what network someone is on; we care who they are. Moving the decision to the edge lets the rule say the thing we mean.
+That is what made this worth doing rather than just clever. Address-based access control has always been a proxy for what we actually mean: we do not care what network someone is on, we care who they are. Moving the decision to the edge lets the rule say the thing we mean.
 
 ```mermaid
 flowchart LR
@@ -72,11 +72,11 @@ The consequence worth stating plainly: traffic arriving this way does not pass t
 
 !!! example "What we stopped having to model"
 
-    The cross-account case is where this paid off most. Reaching a service in another account used to mean the cloud provider's own peering — connections between networks, route tables, non-overlapping address ranges, and a change in two accounts every time something moved.
+    The cross-account case is where this paid off most. Reaching a service in another account used to mean the provider's own peering: connections between networks, route tables, non-overlapping address ranges, and a change in two accounts every time something moved.
 
-    With connectors on both sides and policy at the edge, the networks do not have to meet. Each one dials out. The access decision is made in one place rather than expressed as the intersection of two sets of routes.
+    With connectors on both sides and policy at the edge, the networks never have to meet. Each dials out, and the access decision is made in one place rather than expressed as the intersection of two sets of routes.
 
-    I would not claim peering is obsolete. I would say that a surprising amount of what we used it for was reachability we could get another way, with less to keep in step.
+    I would not claim peering is obsolete. I would say a surprising amount of what we used it for was reachability obtainable another way, with less to keep in step.
 
 ## 4. It replaced the managed DNS service too
 
@@ -97,16 +97,17 @@ Two properties are worth knowing before you do the same:
 
 Two kinds of saving, and they are not the same kind of argument.
 
-The first is resources that stop existing. Each of these is a billed thing in a native cloud design, and several of them are billed per environment, so the count multiplies quietly as you add a staging and a pre-production:
+The first is resources that stop existing. Each is a billed thing in a native cloud design, and some are billed per environment, so the count multiplies quietly as you add a staging and a pre-production:
 
 | Native cloud design | With an outbound connector |
 |---|---|
-| A public load balancer per entry point, with listeners, target groups and health checks | Not required — the edge is the entry point |
-| Certificates to issue and renew at that balancer | Terminated at the edge |
 | Peering relationships between accounts, with route tables and address-range planning | Not required — each side dials out |
 | A separate managed DNS service, and its queries | Collapsed into the edge |
+| Inbound rules on every entry point, carried through every review | None to write, review or re-narrow |
 
-The second is effort, which nobody bills you for and which is the larger number:
+Worth being clear about what does *not* go away. A load balancer is still in the picture, terminating TLS in front of the application, and the host still needs its outbound path. This is not a design that deletes your networking bill. It removes a specific category of it — the things that exist to make inbound reachability safe — and leaves the rest alone.
+
+So the honest summary of the money is: it saves some, mostly by retiring things that were there to manage reachability rather than to serve traffic. The larger saving is time, which nobody bills you for:
 
 - No inbound rules to review, widen by accident, or forget to narrow again.
 - No route tables or address-range coordination to keep in step across accounts.
@@ -118,11 +119,13 @@ That last one is the quiet win. Replacing an instance used to touch something in
 
 !!! example "Where the effort saving actually shows up"
 
-    The resource list is the part that gets into a business case, and it is the less interesting half. The per-environment multiplication is real — balancers and peering relationships are things you need one of per environment, and the count grows without anyone deciding it should — but it is a number somebody can argue with.
+    The resource list is the part that gets into a business case, and it is the less interesting half. The per-environment multiplication is real — a peering relationship is a thing you need one of per environment, and the count grows without anyone deciding it should — but it is a number somebody can argue with.
 
-    The effort saving is harder to put in a slide and easier to feel. It is the review that does not have to happen, the two-account change that is now a one-account change, the address-range conversation that nobody needs to have. None of that appears on an invoice, and all of it was coming out of the same engineers' weeks.
+    The time saving is harder to put in a slide and easier to feel. It is the review that does not have to happen, the two-account change that is now a one-account change, the address-range conversation nobody needs to have. None of that appears on an invoice, and all of it was coming out of the same engineers' weeks.
 
-    *The costing here is structural rather than measured:* I am describing which line items and which recurring tasks stop existing, not a figure. Anyone making this case should count their own, because the balance depends entirely on how many environments and accounts you are running.
+    There is a second-order one I did not expect: the things that go away are the things most likely to be wrong. A stale inbound rule, a route that no longer matches the address range, a hostname defined in two places — those were a steady trickle of small incidents, and removing the mechanism removed the category.
+
+    *The costing here is structural rather than measured:* I am describing which line items and which recurring tasks stop existing, not a figure. Anyone making this case should count their own, because the balance depends entirely on how many environments and accounts they are running.
 
 ## 6. What you take on in exchange
 
@@ -142,7 +145,7 @@ That last one is the quiet win. Replacing an instance used to touch something in
 - **The requirement on your side is one outbound destination and port**, which is a much easier control to describe and defend than an inbound rule.
 - **Access control becomes a policy about people**, not addresses — and it has to move to the edge as part of the change, not after it.
 - **Cross-account reachability may not need peering.** A lot of what peering gets used for is reachability obtainable with less to keep in step.
-- **Count the saving in two columns.** Resources that stop existing — a balancer per entry point, its certificates, peering, a separate DNS service — and the recurring effort nobody bills you for, which is the larger number.
+- **Count the saving in two columns.** Some money, from retiring the things that existed to manage inbound reachability — peering, a separate DNS service, the inbound rules themselves — and rather more time, which nobody bills you for. Be clear about what stays: a balancer still terminates TLS, and the outbound path still costs what it costs.
 - **Expect the DNS consolidation.** Once the edge is in front, a separate managed DNS service is one more place a hostname can be defined.
 - **You are trading a set of network controls for a dependency on the edge.** Make that a decision, not a side effect, and design the edge failover alongside it rather than afterwards.
 
