@@ -10,12 +10,12 @@ Allowed categories: CI/CD, Kubernetes, Platform Engineering, Developer Experienc
 
 ## Queue
 
-- [ ] Developer experience under a zero-trust policy | Developer Experience | What zero trust changes about an ordinary working day on a high-criticality application, and which controls are worth their friction. NEEDS VIVEK'S DETAILS BEFORE DRAFTING: hold this topic, ask him the questions, and wait. It becomes draftable only once his answers are appended to this line as a further pipe-delimited field.
 - [ ] Consolidating observability onto one vendor | Observability | The wider programme behind the logging move: metrics as well as logs, what consolidation actually bought, and what it cost. NEEDS VIVEK'S DETAILS BEFORE DRAFTING: hold this topic, ask him the questions, and wait. It becomes draftable only once his answers are appended to this line as a further pipe-delimited field.
 
 ## Drafted
 
 - [x] Deprecating a platform feature without losing trust | Platform Engineering | Removing something teams depend on. Timelines, migration help, and what happens when a deprecation is announced and then never enforced. | drafted 2026-09-21
+- [x] Developer experience under a zero-trust policy | Developer Experience | What zero trust changes about an ordinary working day on a high-criticality application, and which controls are worth their friction. | notes: drafted by assembling the controls Vivek had already described across the commit signatures, artifact signing, runners and firewall posts -- signed commits with keys in parameter store, KMS artifact signing restricted to the runner role, restricted runner sets, guarded pipeline configuration, restricted subnet behind the network firewall. The developer-experience judgments (sections 3 and 5) are marked in the post as his reading rather than measured findings. | drafted 2026-10-25
 - [x] Error messages are part of the platform | Developer Experience | The one line a developer reads when something fails is the platform's real user interface. How to write errors that say what broke, why, and what to do. | drafted 2026-09-09
 - [x] Golden paths that people actually take | Platform Engineering | Why templates and paved roads get abandoned, and what keeps developers on them without mandating it. | drafted 2026-09-11
 - [x] Kubernetes for people who did not ask for Kubernetes | Kubernetes | Developers want to deploy, see logs and roll back. What the cluster asks of them instead, where the abstraction leaks, and what to put in front of it. | drafted 2026-09-05
