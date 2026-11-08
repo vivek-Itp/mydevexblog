@@ -96,6 +96,10 @@ def to_devto(meta: dict, body: str, site_url: str) -> dict:
     }
 
 
+class DevtoError(Exception):
+    """A single dev.to API call failed. Not fatal on its own."""
+
+
 def api(method: str, path: str, key: str, payload=None):
     data = json.dumps(payload).encode("utf-8") if payload is not None else None
     req = urllib.request.Request(
@@ -117,8 +121,14 @@ def api(method: str, path: str, key: str, payload=None):
                 print(f"rate limited by dev.to, waiting {wait}s before retrying {method} {path}")
                 time.sleep(wait)
                 continue
-            raise SystemExit(f"dev.to API {method} {path} failed: {e.code} {body}")
-    raise SystemExit(f"dev.to API {method} {path} failed after retries")
+            if e.code >= 500 and attempt < 5:
+                # Server-side error on dev.to's end. Usually transient.
+                wait = 5 * (attempt + 1)
+                print(f"dev.to returned {e.code} for {method} {path}, retrying in {wait}s")
+                time.sleep(wait)
+                continue
+            raise DevtoError(f"dev.to API {method} {path} failed: {e.code} {body}")
+    raise DevtoError(f"dev.to API {method} {path} failed after retries")
 
 
 def main() -> int:
@@ -150,7 +160,12 @@ def main() -> int:
     by_title = {}
     page = 1
     while True:
-        batch = api("GET", f"/articles/me/all?per_page=100&page={page}", key)
+        try:
+            batch = api("GET", f"/articles/me/all?per_page=100&page={page}", key)
+        except DevtoError as e:
+            # Without the existing-article list we cannot tell an update from a
+            # create, and guessing would duplicate articles. Stop here.
+            raise SystemExit(f"could not list existing dev.to articles: {e}")
         if not batch:
             break
         for art in batch:
@@ -162,18 +177,32 @@ def main() -> int:
             break
         page += 1
 
-    for a in posts:
+    # Newest first, so today's post is published before any older article can
+    # fail. One article's failure must not stop the others: collect the errors,
+    # keep going, and report them all at the end.
+    failures = []
+    for a in reversed(posts):
         # Match on canonical URL first. Fall back to the title so that a post
         # whose URL changed (a corrected date, a new slug) updates the existing
         # article instead of creating a duplicate.
         aid = by_canonical.get(a["canonical_url"]) or by_title.get(a["title"].strip())
-        if aid:
-            api("PUT", f"/articles/{aid}", key, {"article": a})
-            print(f"updated  {a['title']}")
-        else:
-            res = api("POST", "/articles", key, {"article": a})
-            print(f"created  {a['title']} -> {res.get('url')}")
+        try:
+            if aid:
+                api("PUT", f"/articles/{aid}", key, {"article": a})
+                print(f"updated  {a['title']}")
+            else:
+                res = api("POST", "/articles", key, {"article": a})
+                print(f"created  {a['title']} -> {res.get('url')}")
+        except DevtoError as e:
+            print(f"FAILED   {a['title']}: {e}")
+            failures.append(a["title"])
         time.sleep(4)  # stay well inside dev.to's write rate limit
+
+    if failures:
+        print(f"\n{len(failures)} of {len(posts)} articles failed:")
+        for t in failures:
+            print(f"  - {t}")
+        return 1
     return 0
 
 
